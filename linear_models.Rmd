@@ -81,6 +81,36 @@ fit |>
 ```
 
 
+## Quick look at diagnostics
+
+```{r}
+nyc_airbnb |> 
+  modelr::add_residuals(fit) |> 
+  ggplot(aes(x = borough, y = resid)) +
+  geom_violin() 
+
+nyc_airbnb |> 
+  modelr::add_residuals(fit) |> 
+  ggplot(aes(x = stars, y = resid)) +
+  geom_point() 
+```
+
+## Hypothesis test for categorical predictor
+
+fit a "null" and "alternative" model
+
+```{r}
+fit |> 
+  broom::tidy()
+
+fit_null = lm(price ~ stars + borough, data = nyc_airbnb)
+fit_alternative = lm(price ~ stars + borough + room_type, data = nyc_airbnb)
+
+anova(fit_null, fit_alternative) |> 
+  broom::tidy()
+```
+
+## Borough-level differences
 
 
 
