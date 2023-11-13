@@ -310,3 +310,71 @@ nyc_airbnb |>
 | Queens    |       91.58 |  9.65 |                -69.26 |               -94.97 |
 | Brooklyn  |       69.63 | 20.97 |                -92.22 |              -105.84 |
 | Manhattan |       95.69 | 27.11 |               -124.19 |              -153.64 |
+
+### Homicides in Baltimore
+
+``` r
+baltimore_df =
+  read_csv("./data/homicide-data.csv") |> 
+  filter(city == "Baltimore") |> 
+  mutate(
+    resolved = as.numeric(disposition == "Closed by arrest"),
+    victim_age = as.numeric(victim_age)
+  ) |> 
+  select(resolved, victim_age, victim_race, victim_sex)
+```
+
+    ## Rows: 52179 Columns: 12
+    ## ── Column specification ────────────────────────────────────────────────────────
+    ## Delimiter: ","
+    ## chr (9): uid, victim_last, victim_first, victim_race, victim_age, victim_sex...
+    ## dbl (3): reported_date, lat, lon
+    ## 
+    ## ℹ Use `spec()` to retrieve the full column specification for this data.
+    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+
+fitting a logistic regression
+
+``` r
+fit_logistic = 
+  baltimore_df |> 
+  glm(
+    resolved ~ victim_age + victim_race + victim_sex,
+    data = _,
+    family = binomial()
+  )
+```
+
+look at model results
+
+``` r
+fit_logistic |> 
+  broom::tidy() |> 
+  mutate(OR = exp(estimate)) |> 
+  select(term, estimate, OR)
+```
+
+    ## # A tibble: 7 × 3
+    ##   term                estimate    OR
+    ##   <chr>                  <dbl> <dbl>
+    ## 1 (Intercept)          1.49    4.42 
+    ## 2 victim_age          -0.00724 0.993
+    ## 3 victim_raceBlack    -1.14    0.320
+    ## 4 victim_raceHispanic -0.562   0.570
+    ## 5 victim_raceOther    -1.06    0.345
+    ## 6 victim_raceWhite    -0.296   0.744
+    ## 7 victim_sexMale      -0.880   0.415
+
+``` r
+baltimore_df |> 
+  count(victim_race)
+```
+
+    ## # A tibble: 5 × 2
+    ##   victim_race     n
+    ##   <chr>       <int>
+    ## 1 Asian          11
+    ## 2 Black        2596
+    ## 3 Hispanic       57
+    ## 4 Other           6
+    ## 5 White         157
