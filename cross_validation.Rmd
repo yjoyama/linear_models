@@ -1,0 +1,101 @@
+---
+title: "Cross Validation"
+author: "Yuki Joyama"
+date: "2023-11-14"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(modelr)
+set.seed(1)
+```
+
+## Nonlinear data and CV
+
+```{r}
+nonlin_df = 
+  tibble(
+    id = 1:100,
+    x = runif(100, 0, 1),
+    y = 1 - 10* (x - .3) ^ 2 + rnorm(100, 0, 0.3)
+  )
+
+nonlin_df |> 
+  ggplot(aes(x = x, y = y)) + 
+  geom_point()
+```
+
+Do the train / test split.
+
+```{r}
+train_df = sample_n(nonlin_df, 80) 
+test_df = anti_join(nonlin_df, train_df, by = "id")
+```
+
+```{r}
+train_df |> 
+  ggplot(aes(x = x, y = y)) +
+  geom_point() +
+  geom_point(data = test_df, color = "red") # check
+```
+
+```{r}
+linear_mod = lm(y ~ x, data = train_df)
+smooth_mod = mgcv::gam(y ~ s(x), data = train_df)
+wiggly_mod = mgcv::gam(y ~ s(x, k = 30), sp = 10e-6, data = train_df)
+```
+
+Quick visualization of the linear model
+
+```{r}
+train_df |> 
+  modelr::add_predictions(linear_mod) |>
+  ggplot(aes(x = x, y = y)) +
+  geom_point() +
+  geom_path(aes(y = pred), color = "red")
+
+train_df |> 
+  modelr::add_predictions(smooth_mod) |> 
+  ggplot(aes(x = x, y = y)) + geom_point() + 
+  geom_line(aes(y = pred), color = "red")
+
+train_df |> 
+  modelr::add_predictions(wiggly_mod) |> 
+  ggplot(aes(x = x, y = y)) + geom_point() + 
+  geom_line(aes(y = pred), color = "red")
+```
+
+RMSEs on training data can ba misleading...
+RMSE on testing data gives a sense of out-of-sample prediction accuracy!
+
+```{r}
+rmse(linear_mod, train_df)
+rmse(smooth_mod, train_df)
+rmse(wiggly_mod, train_df) # lowest rmse -> best fit
+
+rmse(linear_mod, test_df)
+rmse(smooth_mod, test_df) # better prediction
+rmse(wiggly_mod, test_df) 
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
