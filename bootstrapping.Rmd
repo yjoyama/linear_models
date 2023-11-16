@@ -1,0 +1,60 @@
+---
+title: "Cross Validation"
+author: "Yuki Joyama"
+date: "2023-11-14"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(modelr)
+library(p8105.datasets)
+set.seed(1)
+```
+
+## Generate a relevant example
+
+```{r}
+n_samp = 250
+
+sim_df_const = 
+  tibble(
+    x = rnorm(n_samp, 1, 1),
+    error = rnorm(n_samp, 0, 1),
+    y = 2 + 3 * x + error
+  )
+
+sim_df_nonconst = 
+  sim_df_const |> 
+  mutate(
+    error = error * 0.75 * x,
+    y = 2 + 3 * x + error 
+  )
+
+sim_df_const |> 
+  ggplot(aes(x = x, y = y)) + geom_point()
+
+sim_df_nonconst |> 
+  ggplot(aes(x = x, y = y)) + geom_point()
+```
+
+fit some linear models
+
+```{r}
+sim_df_nonconst |> 
+  lm(y ~ x, data = _) |> 
+  broom::tidy()
+```
+
+
+
+
+
+
+
+
+
